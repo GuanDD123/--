@@ -15,6 +15,7 @@
 
 ## 项目参考 (Refer)
 
+- https://github.com/NearHuiwen/TiktokDouyinCrawler
 - https://github.com/JoeanAmier/TikTokDownloader
 - https://github.com/Johnserf-Seed/f2
 - https://github.com/Johnserf-Seed/TikTokDownload
