@@ -1,7 +1,6 @@
 from datetime import date
 from urllib.parse import urlencode
 from requests import exceptions, get
-from tool import retry
 from rich.progress import (
     BarColumn,
     Progress,
@@ -13,7 +12,7 @@ from time import sleep
 
 from config import PROGRESS, WARNING
 from encrypt_params import get_a_bogus
-from tool import ColorfulConsole
+from tool import ColorfulConsole, retry
 from config import Settings
 
 
