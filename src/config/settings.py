@@ -92,7 +92,7 @@ class Settings:
         '''创建默认配置文件'''
         with open(self.file, 'w', encoding=ENCODE) as f:
             dump(dict(self.default_settings), f, indent=4, ensure_ascii=False)
-        print(f'[{GREEN}]创建默认配置文件 settings.json 成功！\n')
+        print(f'[{GREEN}]创建默认配置文件 settings.json 成功！')
 
     def __check_accounts(self):
         for account in self.accounts:

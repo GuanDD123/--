@@ -33,7 +33,6 @@ class Scheduler:
         self.acquirer = Acquire(self.settings)
         self.running = True
 
-
     def run(self):
         self.check_config()
         if self.running:
@@ -61,12 +60,10 @@ class Scheduler:
     def main_menu(self):
         self.cookie.update()
         for i in (
-            '可选择的运行模式 (q 退出)',
-            f'{'='*25}',
+            '='*25,
             '1. 复制粘贴写入 Cookie',
-            f'{'='*25}',
             '2. 批量下载账号作品(配置文件)',
-            f'{'='*25}',
+            '='*25,
         ):
             print(f'[{CYAN}]{i}')
         while (mode := input('\n请选择运行模式：').strip()).lower() != 'q':
@@ -85,8 +82,11 @@ class Scheduler:
                 self.cookie.update()
 
     def deal_account_works(self, num: int, account: dict[str, str | date]):
-        print(f'[{CYAN}]\n\n开始处理第 {num} 个账号' if num else '开始处理账号')
-        print(f'[{CYAN}]最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}')
+        for i in (
+            f'[{CYAN}]\n开始处理第 {num} 个账号' if num else '开始处理账号',
+            f'[{CYAN}]最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}\n'
+        ):
+            print(f'[{CYAN}{i}]')
         items = self.acquirer.request_items(account['sec_user_id'], account['earliest_date'])
         if not any(items):
             print(f'[{YELLOW}]获取账号主页数据失败')
