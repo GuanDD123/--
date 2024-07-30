@@ -71,17 +71,17 @@ class Scheduler:
                 if mode == '1':
                     self.cookie.input_save()
                 elif mode == '2':
-                    self.account_acquisition_interactive()
+                    self.__deal_accounts()
 
-    def account_acquisition_interactive(self):
+    def __deal_accounts(self):
         accounts = self.settings.accounts
         print(f'[{CYAN}]共有 {len(accounts)} 个账号的作品等待下载')
         for num, account in enumerate(accounts, start=1):
-            self.deal_account_works(num, account)
+            self.__deal_account(num, account)
             if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
                 self.cookie.update()
 
-    def deal_account_works(self, num: int, account: dict[str, str | date]):
+    def __deal_account(self, num: int, account: dict[str, str | date]):
         for i in (
             f'[{CYAN}]\n开始处理第 {num} 个账号' if num else '开始处理账号',
             f'[{CYAN}]最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}\n'
