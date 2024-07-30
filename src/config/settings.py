@@ -9,14 +9,14 @@ from os import makedirs
 from copy import deepcopy
 from types import MappingProxyType
 from datetime import date, timedelta, datetime
+from rich import print
 
 from .constant import (
     PROJECT_ROOT,
-    ERROR, WARNING, INFO,
+    RED, YELLOW, GREEN,
     ENCODE,
     USER_AGENT
 )
-from tool import ColorfulConsole
 
 
 class Settings:
@@ -34,8 +34,7 @@ class Settings:
         'cookies': {}
     })
 
-    def __init__(self, console: ColorfulConsole) -> None:
-        self.console = console
+    def __init__(self) -> None:
         self.name_format = ('create_time', 'id', 'type', 'desc')  # 'id', 'desc', 'create_time', 'nickname', 'uid', 'mark', 'type'
         self.date_format = '%Y-%m-%d'
         self.split = '-'
@@ -60,9 +59,9 @@ class Settings:
                 self.cookies = self.settings['cookies']
                 self.__check_cookies('cookies')
             else:
-                self.console.print('配置文件 settings.json 缺少必要的参数！', style=ERROR)
+                print(f'[{RED}]配置文件 settings.json 缺少必要的参数！')
                 self.quit = True
-                if self.console.input('是否生成默认配置文件？Y/N：').lower() == 'y':
+                if input('是否生成默认配置文件？Y/N：').lower() == 'y':
                     self.__create()
         else:
             self.quit = True
@@ -70,14 +69,10 @@ class Settings:
 
     def __check_save_folder(self, key: str):
         if not self.save_folder:
-            self.console.print(
-                f'参数 {key} 未设置，将使用默认存储位置 {PROJECT_ROOT}！',
-                style=WARNING)
+            print(f'[{YELLOW}]参数 {key} 未设置，将使用默认存储位置 {PROJECT_ROOT}！')
             self.save_folder = PROJECT_ROOT
         elif not isinstance(self.save_folder, str):
-            self.console.print(
-                f'参数 {key} 值 {self.save_folder} 格式错误，将使用默认存储位置 {PROJECT_ROOT}！',
-                style=WARNING)
+            print(f'[{YELLOW}]参数 {key} 值 {self.save_folder} 格式错误，将使用默认存储位置 {PROJECT_ROOT}！')
             self.save_folder = PROJECT_ROOT
         elif not exists(self.save_folder):
             makedirs(self.save_folder, exist_ok=True)
@@ -89,7 +84,7 @@ class Settings:
                 with open(self.file, encoding=ENCODE) as f:
                     return load(f)
             except JSONDecodeError:
-                self.console.print('配置文件 settings.json 格式错误，请检查 JSON 格式！', style=ERROR)
+                print(f'[{RED}]配置文件 settings.json 格式错误，请检查 JSON 格式！')
         else:
             self.__create()
 
@@ -97,7 +92,7 @@ class Settings:
         '''创建默认配置文件'''
         with open(self.file, 'w', encoding=ENCODE) as f:
             dump(dict(self.default_settings), f, indent=4, ensure_ascii=False)
-        self.console.print('创建默认配置文件 settings.json 成功！\n', style=INFO)
+        print(f'[{GREEN}]创建默认配置文件 settings.json 成功！\n')
 
     def __check_accounts(self):
         for account in self.accounts:
@@ -113,9 +108,7 @@ class Settings:
         if sec_user_id:
             return sec_user_id
         else:
-            self.console.print(
-                f'参数 accounts 中账号 {mark} 的 url {url} 错误，提取 sec_user_id 失败！',
-                style=ERROR)
+            print(f'[{RED}]参数 accounts 中账号 {mark} 的 url {url} 错误，提取 sec_user_id 失败！')
             self.quit = True
 
     def __generate_date_earliest(self, date_: str):
@@ -125,7 +118,7 @@ class Settings:
             try:
                 return datetime.strptime(date_, '%Y/%m/%d').date()
             except ValueError:
-                self.console.print(f'作品最早发布日期 {date_} 无效', style=WARNING)
+                print(f'[{YELLOW}]作品最早发布日期 {date_} 无效')
                 return date(2016, 9, 20)
 
     def __generate_date_latest(self, date_: str):
@@ -135,12 +128,12 @@ class Settings:
             try:
                 return datetime.strptime(date_, '%Y/%m/%d').date()
             except ValueError:
-                self.console.print(f'作品最晚发布日期无效 {date_}', style=WARNING)
+                print(f'[{YELLOW}]作品最晚发布日期无效 {date_}')
                 return date.today() - timedelta(days=1)
 
     def __check_cookies(self, key: str):
         if not isinstance(self.cookies, dict):
-            self.console.print(f'参数 {key} 格式错误，请重新设置！', style=WARNING)
+            print(f'[{YELLOW}]参数 {key} 格式错误，请重新设置！')
             self.cookies = {}
 
     def save(self):
@@ -148,4 +141,4 @@ class Settings:
         self.settings['cookies'] = self.cookies
         with open(self.file, 'w', encoding=ENCODE) as f:
             dump(self.settings, f, indent=4, ensure_ascii=False)
-        self.console.print('保存配置成功！', style=INFO)
+        print(f'[{GREEN}]保存配置成功！')

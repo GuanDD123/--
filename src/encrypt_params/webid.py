@@ -1,9 +1,9 @@
 from requests import exceptions
 from json import dumps
+from rich import print
 
 from .general import send_post
-from config import ERROR, USER_AGENT
-from tool import ColorfulConsole
+from config import USER_AGENT, RED
 
 
 class WebID:
@@ -24,4 +24,4 @@ class WebID:
                 return response.json().get('web_id')
             raise KeyError
         except (exceptions.JSONDecodeError, KeyError):
-            ColorfulConsole().print(f'获取 webid 参数失败！', style=ERROR)
+            print(f'[{RED}]获取 webid 参数失败！')

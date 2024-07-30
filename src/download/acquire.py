@@ -9,18 +9,19 @@ from rich.progress import (
 )
 from random import randint
 from time import sleep
+from rich import print
+from rich.console import Console
 
-from config import PROGRESS, WARNING
+from config import MAGENTA, CYAN, YELLOW
 from encrypt_params import get_a_bogus
-from tool import ColorfulConsole, retry
+from tool import retry
 from config import Settings
 
 
 class Acquire():
     post_api = 'https://www.douyin.com/aweme/v1/web/aweme/post/'
 
-    def __init__(self, settings: Settings, console: ColorfulConsole):
-        self.console = console
+    def __init__(self, settings: Settings):
         self.settings = settings
 
     def request_items(self, sec_user_id: str, earliest: date):
@@ -35,17 +36,17 @@ class Acquire():
                 if (items_page := self.__request_items_page(sec_user_id)):
                     items.extend(items_page)
                     self.__early_stop(earliest)
-        self.console.print(f'当前账号获取作品数量: {len(items)}')
+        print(f'[{CYAN}]当前账号获取作品数量: {len(items)}')
         return items
 
     def __progress_object(self):
         return Progress(
-            TextColumn('[progress.description]{task.description}', style=PROGRESS, justify='left'),
+            TextColumn('[progress.description]{task.description}', style=MAGENTA, justify='left'),
             '•',
             BarColumn(bar_width=20),
             '•',
             TimeElapsedColumn(),
-            console=self.console,
+            console=Console(),
             transient=True,
         )
 
@@ -75,21 +76,19 @@ class Acquire():
         }
         self.__deal_url_params(params)
         if not (data := self.__send_get(params=params)):
-            self.console.print('获取账号作品数据失败', style=WARNING)
+            print(f'[{YELLOW}]获取账号作品数据失败')
             self.finished = True
         else:
             try:
                 if (items_page := data['aweme_list']) is None:
-                    self.console.print(
-                        '该账号为私密账号，需要使用登录后的 Cookie，且登录的账号需要关注该私密账号',
-                        style=WARNING)
+                    print(f'[{YELLOW}]该账号为私密账号，需要使用登录后的 Cookie，且登录的账号需要关注该私密账号')
                     self.finished = True
                 else:
                     self.cursor = data['max_cursor']
                     self.finished = not data['has_more']
                     return items_page
             except KeyError:
-                self.console.print(f'账号作品数据响应内容异常: {data}', style=WARNING)
+                print(f'[{YELLOW}]账号作品数据响应内容异常: {data}')
                 self.finished = True
 
     def __send_get(self, params):
@@ -106,19 +105,18 @@ class Acquire():
                 exceptions.ChunkedEncodingError,
                 exceptions.ConnectionError,
         ):
-            self.console.print(f'网络异常，请求 {self.post_api}?{urlencode(params)} 失败', style=WARNING)
+            print(f'[{YELLOW}]网络异常，请求 {self.post_api}?{urlencode(params)} 失败')
             return
         except exceptions.ReadTimeout:
-            self.console.print(f'网络异常，请求 {self.post_api}?{urlencode(params)} 超时', style=WARNING)
+            print(f'[{YELLOW}]网络异常，请求 {self.post_api}?{urlencode(params)} 超时')
             return
         try:
             return response.json()
         except exceptions.JSONDecodeError:
             if response.text:
-                self.console.print(f'响应内容不是有效的 JSON 格式：{response.text}', style=WARNING)
+                print(f'[{YELLOW}]响应内容不是有效的 JSON 格式：{response.text}')
             else:
-                self.console.print(
-                    '响应内容为空，可能是接口失效或者 Cookie 失效，请尝试更新 Cookie', style=WARNING)
+                print(f'[{YELLOW}]响应内容为空，可能是接口失效或者 Cookie 失效，请尝试更新 Cookie')
 
     @staticmethod
     def __wait():

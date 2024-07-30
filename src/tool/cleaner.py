@@ -1,17 +1,16 @@
 from platform import system
 from string import whitespace
 from emoji import replace_emoji
+from rich import print
 
-from .colorfulConsole import ColorfulConsole
-from config import WARNING
+from config import YELLOW
 
 
 class Cleaner:
 
-    def __init__(self, console: ColorfulConsole):
+    def __init__(self):
         '''替换字符串中包含的非法字符，
         默认根据系统类型生成对应的非法字符集合，也可以自行设置非法字符集合'''
-        self.console = console
         self.rule = self.default_rule()
 
     def default_rule(self):
@@ -22,7 +21,7 @@ class Cleaner:
         elif now_system == 'Linux':
             rule = {'/', '\x00'}  # Linux 系统
         else:
-            self.console.print('不受支持的操作系统类型，可能无法正常去除非法字符！', style=WARNING)
+            print(f'[{YELLOW}]不受支持的操作系统类型，可能无法正常去除非法字符！')
             rule = set()
         return rule | {i for i in whitespace[1:]}  # 补充换行符等非法字符
 
@@ -50,5 +49,4 @@ class Cleaner:
 
     def illegal_nickname(self):
         '''当 账号昵称/标识 过滤非法字符后不是有效的文件夹名称时，如何处理异常'''
-        return self.console.input(
-            '当前 账号昵称/标识 不是有效的文件夹名称，请输入临时的账号标识或者合集标识：')
+        return input('当前 账号昵称/标识 不是有效的文件夹名称，请输入临时的账号标识或者合集标识：')

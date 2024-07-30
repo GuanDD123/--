@@ -2,9 +2,10 @@ from requests import (
     post,
     exceptions
 )
+from rich import print
 
-from config import USER_AGENT, ERROR
-from tool import retry, ColorfulConsole
+from config import USER_AGENT, RED
+from tool import retry
 
 
 HEADERS = {'User-Agent': USER_AGENT}
@@ -33,4 +34,4 @@ def extract_value(response_headers: dict, key: str):
             value = set_cookie.split('; ')[0].split('=', 1)
             return {value[0]: value[1]}
         except IndexError:
-            ColorfulConsole().print(f'获取 {key} 参数失败！', style=ERROR)
+            print(f'[{RED}]获取 {key} 参数失败！')

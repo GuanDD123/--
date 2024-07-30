@@ -8,14 +8,13 @@ ENCODE = 'UTF-8-SIG' if name == 'nt' else 'UTF-8'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 PHONE_USER_AGENT = 'com.ss.android.ugc.trill/494+Mozilla/5.0+(Linux;+Android+12;+2112123G+Build/SKQ1.211006.001;+wv)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Version/4.0+Chrome/107.0.5304.105+Mobile+Safari/537.36'
 
-# 彩色交互提示颜色设置，支持标准颜色名称、Hex、RGB 格式
-MASTER = 'b yellow'
-PROMPT = 'b bright_cyan'
-PROGRESS = 'b bright_magenta'
-GENERAL = 'b bright_white'
-ERROR = 'b bright_red'
-WARNING = 'b bright_yellow'
-INFO = 'b bright_green'
+# 颜色设置，支持标准颜色名称、Hex、RGB 格式
+WHITE = '#aaaaaa'
+CYAN = 'bright_cyan'
+RED = 'bright_red'
+YELLOW = 'bright_yellow'
+GREEN = 'bright_green'
+MAGENTA = 'bright_magenta'
 
 # 文件 desc 最大长度限制
 DESCRIPTION_LENGTH = 64

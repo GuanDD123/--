@@ -3,20 +3,19 @@ from os.path import (
     exists,
 )
 from os import remove
+from rich import print
 
 from config import (
-    WARNING,
+    YELLOW,
     PROJECT_ROOT,
     ENCODE
 )
-from tool import ColorfulConsole
 
 
 class DownloadRecorder:
     path = join_path(PROJECT_ROOT, 'cache/IDRecorder.txt')
 
-    def __init__(self, console: ColorfulConsole):
-        self.console = console
+    def __init__(self):
         self.records = set()
 
     def read(self):
@@ -25,9 +24,7 @@ class DownloadRecorder:
             with open(self.path, encoding=ENCODE) as f:
                 self.records = {line.strip() for line in f}
         else:
-            self.console.print(
-                f'作品下载记录数据已丢失！\n数据文件路径：{self.path}',
-                style=WARNING)
+            print(f'[{YELLOW}]作品下载记录数据已丢失！\n数据文件路径：{self.path}')
 
     def open_(self):
         self.f_obj = open(self.path, 'a', encoding=ENCODE)
