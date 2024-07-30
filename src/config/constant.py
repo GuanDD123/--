@@ -22,9 +22,6 @@ DESCRIPTION_LENGTH = 64
 # 重新执行的最大次数
 RETRY = 5
 
-# 协程最大数量
-MAX_WORKERS = 5
-
 # Cookie 更新间隔，单位：秒
 COOKIE_UPDATE_INTERVAL = 10 * 60
 

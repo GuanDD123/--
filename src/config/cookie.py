@@ -13,6 +13,7 @@ from browser_cookie3 import (
     BrowserCookieError,
 )
 from http.cookiejar import CookieJar
+from time import time
 
 from .constant import CYAN, GREEN, YELLOW
 from .settings import Settings
@@ -54,6 +55,7 @@ class Cookie:
         if self.settings.cookies:
             self.__add_cookies()
             self.settings.headers['Cookie'] = self.__generate_str(self.settings.cookies)
+            self.last_update_time = time()
 
     def __add_cookies(self):
         parameters = (MsToken.get_real_ms_token(), TtWid.get_tt_wid())

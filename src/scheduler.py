@@ -4,11 +4,9 @@ from os.path import (
 )
 from os import makedirs
 from shutil import rmtree
-from threading import Event
-from threading import Thread
-from contextlib import suppress
 from datetime import date
 from rich import print
+from time import time
 
 from config import (
     PROJECT_ROOT,
@@ -31,16 +29,10 @@ class Scheduler:
         self.settings = Settings()
         self.cookie = Cookie(self.settings)
         self.parse = Parse(self.cleaner, self.settings)
-        self.download = Download(self.settings, self.cleaner, self.download_recorder)
+        self.download = Download(self.settings, self.cleaner, self.cookie, self.download_recorder)
         self.acquirer = Acquire(self.settings)
-        self.event = Event()
-        self.cookie_task = Thread(target=self.periodic_update_cookie)
         self.running = True
 
-    def periodic_update_cookie(self):
-        while not self.event.is_set():
-            self.cookie.update()
-            self.event.wait(COOKIE_UPDATE_INTERVAL)
 
     def run(self):
         self.check_config()
@@ -66,8 +58,7 @@ class Scheduler:
             makedirs(cache_folder)
 
     def main_menu(self):
-        if not self.cookie_task.is_alive():
-            self.cookie_task.start()
+        self.cookie.update()
         for i in (
             '可选择的运行模式 (q 退出)',
             f'{'='*25}',
@@ -79,11 +70,10 @@ class Scheduler:
         ):
             print(f'[{CYAN}]{i}')
         if self.running:
-            while (mode := input('请选择运行模式：').strip()).lower() != 'q':
+            while (mode := input('\n请选择运行模式：').strip()).lower() != 'q':
                 if mode:
                     if mode == '1':
                         self.cookie.input_save()
-                        self.cookie.update()
                     elif mode == '2':
                         self.cookie.browser_save()
                     elif mode == '3':
@@ -94,9 +84,9 @@ class Scheduler:
         accounts = self.settings.accounts
         print(f'[{CYAN}]共有 {len(accounts)} 个账号的作品等待下载')
         for num, account in enumerate(accounts, start=1):
-            if not self.deal_account_works(num, account):
-                if num != len(accounts):
-                    continue
+            self.deal_account_works(num, account)
+            if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
+                self.cookie.update()
 
     def deal_account_works(self, num: int, account: dict[str, str | date]):
         print(f'[{CYAN}]\n\n开始处理第 {num} 个账号' if num else '开始处理账号')
@@ -120,7 +110,6 @@ class Scheduler:
 
     def close(self):
         rmtree(join_path(PROJECT_ROOT, 'cache'))
-        self.event.set()
         self.download_recorder.delete()
         self.download_items.delete()
         print(f'[{WHITE}]程序结束运行')

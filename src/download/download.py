@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 from os import makedirs, remove
 from os.path import join as join_path, exists
 from rich.progress import (
@@ -11,24 +10,25 @@ from rich.progress import (
 )
 from requests import get, exceptions, Response
 from rich import print
-from rich.console import Console
+from time import time
 
 from config import (
     GREEN, CYAN, YELLOW, MAGENTA,
-    MAX_WORKERS
+    COOKIE_UPDATE_INTERVAL
 )
-from config import Settings
+from config import Settings, Cookie
 from tool import retry, Cleaner
 from backup import DownloadRecorder
 
 
 class Download:
 
-    def __init__(self, settings: Settings, cleaner: Cleaner,
+    def __init__(self, settings: Settings, cleaner: Cleaner, cookie: Cookie,
                  download_recorder: DownloadRecorder):
         self.download_recorder = download_recorder
         self.settings = settings
         self.cleaner = cleaner
+        self.cookie = cookie
 
     def download_files(self, items: list[dict], account_id: str, account_mark: str):
         '''下载作品文件'''
@@ -36,9 +36,10 @@ class Download:
         save_folder = self.__create_save_folder(account_id, account_mark)
         tasks = self.__generate_task(items, save_folder)
         with self.__progress_object() as progress:
-            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-                for task in tasks:
-                    pool.submit(self.__request_file, *task, progress=progress)
+            for task in tasks:
+                self.__request_file(*task, progress=progress)
+                if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
+                    self.cookie.update()
 
     def __generate_task(self, items: list[dict], save_folder: str):
         '''生成下载任务信息列表并返回'''
@@ -114,7 +115,6 @@ class Download:
             DownloadColumn(binary_units=True),
             '•',
             TimeRemainingColumn(),
-            console=Console(),
             transient=True,
         )
 

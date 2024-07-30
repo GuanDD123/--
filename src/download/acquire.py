@@ -10,7 +10,6 @@ from rich.progress import (
 from random import randint
 from time import sleep
 from rich import print
-from rich.console import Console
 
 from config import MAGENTA, CYAN, YELLOW
 from encrypt_params import get_a_bogus
@@ -46,7 +45,6 @@ class Acquire():
             BarColumn(bar_width=20),
             '•',
             TimeElapsedColumn(),
-            console=Console(),
             transient=True,
         )
 
