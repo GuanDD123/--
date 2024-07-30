@@ -36,7 +36,8 @@ class Scheduler:
 
     def run(self):
         self.check_config()
-        self.main_menu()
+        if self.running:
+            self.main_menu()
         self.close()
 
     def check_config(self):
@@ -68,14 +69,12 @@ class Scheduler:
             f'{'='*25}',
         ):
             print(f'[{CYAN}]{i}')
-        if self.running:
-            while (mode := input('\n请选择运行模式：').strip()).lower() != 'q':
-                if mode:
-                    if mode == '1':
-                        self.cookie.input_save()
-                    elif mode == '2':
-                        self.account_acquisition_interactive()
-            mode = None
+        while (mode := input('\n请选择运行模式：').strip()).lower() != 'q':
+            if mode:
+                if mode == '1':
+                    self.cookie.input_save()
+                elif mode == '2':
+                    self.account_acquisition_interactive()
 
     def account_acquisition_interactive(self):
         accounts = self.settings.accounts
