@@ -1,28 +1,12 @@
 from re import finditer
-from browser_cookie3 import (
-    chrome,
-    chromium,
-    opera,
-    opera_gx,
-    brave,
-    edge,
-    vivaldi,
-    firefox,
-    librewolf,
-    safari,
-    BrowserCookieError,
-)
-from http.cookiejar import CookieJar
 from time import time
 
-from .constant import CYAN, GREEN, YELLOW
+from .constant import CYAN, GREEN
 from .settings import Settings
 from encrypt_params import MsToken, TtWid
 
 
 class Cookie:
-    '''browser_cookie 代码参考：https://github.com/Johnserf-Seed/f2/blob/main/f2/apps/douyin/cli.py'''
-
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
@@ -62,26 +46,6 @@ class Cookie:
         for i in parameters:
             if isinstance(i, dict):
                 self.settings.cookies |= i
-
-    def browser_save(self):
-        '从指定浏览器获取 cookiejar，转为 dict，保存到 Settings.cookies，并存入配置文件'
-        for i in (
-            '自动读取指定浏览器的 Cookie 并写入配置文件',
-            '支持浏览器：1 Chrome, 2 Chromium, 3 Opera, 4 Opera GX, 5 Brave, 6 Edge, 7 Vivaldi, 8 Firefox, 9 LibreWolf, 10 Safari'):
-            print(f'[{CYAN}]{i}')
-        browser = input('请先关闭对应的浏览器，然后输入浏览器序号：')
-        browser_allow = (chrome, chromium, opera, opera_gx, brave, edge, vivaldi, firefox, librewolf, safari)
-        try:
-            cookie = browser_allow[int(browser) - 1](domain_name='douyin.com')
-            self.settings.cookies = self.__generate_dict_cookiejar(cookie)
-            self.__check()
-            self.__save()
-        except ValueError:
-            print(f'[{YELLOW}]浏览器序号错误，未写入 Cookie！')
-        except PermissionError:
-            print(f'[{YELLOW}]获取 Cookie 失败，请先关闭对应的浏览器，然后输入浏览器序号！',)
-        except BrowserCookieError:
-            print(f'[{YELLOW}]获取 Cookie 失败，未找到对应浏览器的 Cookie 数据！')
 
     @staticmethod
     def __generate_str(cookies: dict):
@@ -159,8 +123,3 @@ class Cookie:
             if key in cookies_key:
                 cookies[key] = value
         return cookies
-
-    @staticmethod
-    def __generate_dict_cookiejar(cookie: CookieJar):
-        '''根据 cookiejar 生成 dict'''
-        return {i.name: i.value for i in cookie}

@@ -1,4 +1,3 @@
-pip install browser_cookie3
 pip install rich
 pip install requests
 pip install py_mini_racer

@@ -63,9 +63,8 @@ class Scheduler:
             '可选择的运行模式 (q 退出)',
             f'{'='*25}',
             '1. 复制粘贴写入 Cookie',
-            '2. 从浏览器获取 Cookie',
             f'{'='*25}',
-            '3. 批量下载账号作品(配置文件)',
+            '2. 批量下载账号作品(配置文件)',
             f'{'='*25}',
         ):
             print(f'[{CYAN}]{i}')
@@ -75,8 +74,6 @@ class Scheduler:
                     if mode == '1':
                         self.cookie.input_save()
                     elif mode == '2':
-                        self.cookie.browser_save()
-                    elif mode == '3':
                         self.account_acquisition_interactive()
             mode = None
 
