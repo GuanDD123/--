@@ -26,19 +26,19 @@ class Acquire():
     def request_items(self, sec_user_id: str, earliest: date):
         '''获取账号作品数据并返回'''
         items = []
-        with self.__progress_object() as progress:
+        with self._progress_object() as progress:
             task_id = progress.add_task('正在获取账号主页数据', total=None)
             self.cursor = 0
             self.finished = False
             while not self.finished:
                 progress.update(task_id)
-                if (items_page := self.__request_items_page(sec_user_id)):
+                if (items_page := self._request_items_page(sec_user_id)):
                     items.extend(items_page)
-                    self.__early_stop(earliest)
+                    self._early_stop(earliest)
         print(f'[{CYAN}]当前账号获取作品数量: {len(items)}')
         return items
 
-    def __progress_object(self):
+    def _progress_object(self):
         return Progress(
             TextColumn('[progress.description]{task.description}', style=MAGENTA, justify='left'),
             '•',
@@ -49,7 +49,7 @@ class Acquire():
         )
 
     @retry
-    def __request_items_page(self, sec_user_id: str):
+    def _request_items_page(self, sec_user_id: str):
         '''获取单页作品数据，更新 self.cursor'''
         params = {
             'device_platform': 'webapp',
@@ -72,8 +72,8 @@ class Acquire():
             'platform': 'PC',
             'downlink': '10',
         }
-        self.__deal_url_params(params)
-        if not (data := self.__send_get(params=params)):
+        self._deal_url_params(params)
+        if not (data := self._send_get(params=params)):
             print(f'[{YELLOW}]获取账号作品数据失败')
             self.finished = True
         else:
@@ -89,14 +89,14 @@ class Acquire():
                 print(f'[{YELLOW}]账号作品数据响应内容异常: {data}')
                 self.finished = True
 
-    def __send_get(self, params):
+    def _send_get(self, params):
         try:
             response = get(
                 self.post_api,
                 params=params,
                 timeout=self.settings.timeout,
                 headers=self.settings.headers)
-            self.__wait()
+            self._wait()
         except (
                 exceptions.ProxyError,
                 exceptions.SSLError,
@@ -117,17 +117,17 @@ class Acquire():
                 print(f'[{YELLOW}]响应内容为空，可能是接口失效或者 Cookie 失效，请尝试更新 Cookie')
 
     @staticmethod
-    def __wait():
+    def _wait():
         sleep(randint(15, 45)/10)
 
-    def __deal_url_params(self, params: dict, number: int = 8):
+    def _deal_url_params(self, params: dict, number: int = 8):
         '''添加 msToken、X-Bogus'''
         cookies = self.settings.cookies
         if isinstance(cookies, dict) and 'msToken' in cookies:
             params['msToken'] = cookies['msToken']
         params['a_bogus'] = get_a_bogus(params)
 
-    def __early_stop(self, earliest: date):
+    def _early_stop(self, earliest: date):
         '''如果获取数据的发布日期已经早于限制日期，就不需要再获取下一页的数据了'''
         if earliest > date.fromtimestamp(self.cursor / 1000):
             self.finished = True

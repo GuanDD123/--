@@ -48,26 +48,26 @@ class Settings:
         若配置文件有误，则返回 False；
         如果没有配置文件，则创建默认配置文件；
         若缺少参数，询问是否创建默认配置文件'''
-        self.settings = self.__read()
+        self.settings = self._read()
         self.quit = False
         if self.settings:
             if set(self.default_settings.keys()) <= (set(self.settings.keys())):
                 self.accounts = deepcopy(self.settings['accounts'])
-                self.__check_accounts()
+                self._check_accounts()
                 self.save_folder = self.settings['save_folder']
-                self.__check_save_folder('save_folder')
+                self._check_save_folder('save_folder')
                 self.cookies = self.settings['cookies']
-                self.__check_cookies('cookies')
+                self._check_cookies('cookies')
             else:
                 print(f'[{RED}]配置文件 settings.json 缺少必要的参数！')
                 self.quit = True
                 if input('是否生成默认配置文件？Y/N：').lower() == 'y':
-                    self.__create()
+                    self._create()
         else:
             self.quit = True
         return False if self.quit else True
 
-    def __check_save_folder(self, key: str):
+    def _check_save_folder(self, key: str):
         if not self.save_folder:
             print(f'[{YELLOW}]参数 {key} 未设置，将使用默认存储位置 {PROJECT_ROOT}！')
             self.save_folder = PROJECT_ROOT
@@ -77,7 +77,7 @@ class Settings:
         elif not exists(self.save_folder):
             makedirs(self.save_folder, exist_ok=True)
 
-    def __read(self):
+    def _read(self):
         '''读取配置文件并返回配置内容'''
         if exists(self.file):
             try:
@@ -86,23 +86,23 @@ class Settings:
             except JSONDecodeError:
                 print(f'[{RED}]配置文件 settings.json 格式错误，请检查 JSON 格式！')
         else:
-            self.__create()
+            self._create()
 
-    def __create(self):
+    def _create(self):
         '''创建默认配置文件'''
         with open(self.file, 'w', encoding=ENCODE) as f:
             dump(dict(self.default_settings), f, indent=4, ensure_ascii=False)
         print(f'[{GREEN}]创建默认配置文件 settings.json 成功！')
 
-    def __check_accounts(self):
+    def _check_accounts(self):
         for account in self.accounts:
-            account['sec_user_id'] = self.__extract_sec_user_id(account['mark'], account['url'])
-            account['earliest_date'] = self.__generate_date_earliest(account['earliest'])
-            account['latest_date'] = self.__generate_date_latest(account['latest'])
+            account['sec_user_id'] = self._extract_sec_user_id(account['mark'], account['url'])
+            account['earliest_date'] = self._generate_date_earliest(account['earliest'])
+            account['latest_date'] = self._generate_date_latest(account['latest'])
             if self.quit:
                 break
 
-    def __extract_sec_user_id(self, mark: str, url: str):
+    def _extract_sec_user_id(self, mark: str, url: str):
         sec_user_id = match(
             r'https://www\.douyin\.com/user/([A-Za-z0-9_-]+)(\?.*)?', url).group(1)
         if sec_user_id:
@@ -111,7 +111,7 @@ class Settings:
             print(f'[{RED}]参数 accounts 中账号 {mark} 的 url {url} 错误，提取 sec_user_id 失败！')
             self.quit = True
 
-    def __generate_date_earliest(self, date_: str):
+    def _generate_date_earliest(self, date_: str):
         if not date_:
             return date(2016, 9, 20)
         else:
@@ -121,7 +121,7 @@ class Settings:
                 print(f'[{YELLOW}]作品最早发布日期 {date_} 无效')
                 return date(2016, 9, 20)
 
-    def __generate_date_latest(self, date_: str):
+    def _generate_date_latest(self, date_: str):
         if not date_:
             return date.today() - timedelta(days=1)
         else:
@@ -131,7 +131,7 @@ class Settings:
                 print(f'[{YELLOW}]作品最晚发布日期无效 {date_}')
                 return date.today() - timedelta(days=1)
 
-    def __check_cookies(self, key: str):
+    def _check_cookies(self, key: str):
         if not isinstance(self.cookies, dict):
             print(f'[{YELLOW}]参数 {key} 格式错误，请重新设置！')
             self.cookies = {}

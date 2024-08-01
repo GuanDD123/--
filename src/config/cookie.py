@@ -14,11 +14,11 @@ class Cookie:
         '''输入 cookie，转为 dict，保存到 Settings.cookies 属性中，并存入配置文件'''
         while not (cookie := print(f'[{CYAN}]请粘贴 Cookie 内容: ')):
             continue
-        self.settings.cookies = self.__generate_dict_str(cookie)
-        self.__check()
-        self.__save()
+        self.settings.cookies = self._generate_dict_str(cookie)
+        self._check()
+        self._save()
 
-    def __check(self):
+    def _check(self):
         '''检查 Settings.cookies 是否已登录；删除空键值对'''
         cookies = self.settings.cookies
         if not cookies['sessionid_ss']:
@@ -29,7 +29,7 @@ class Cookie:
         for key in keys_to_remove:
             del cookies[key]
 
-    def __save(self):
+    def _save(self):
         '''将 Settings.cookies 存储到 settings.json'''
         self.settings.save()
         print(f'[{GREEN}]写入 Cookie 成功！')
@@ -37,25 +37,25 @@ class Cookie:
     def update(self):
         '''更新 Settings.cookies 与 Settings.headers'''
         if self.settings.cookies:
-            self.__add_cookies()
-            self.settings.headers['Cookie'] = self.__generate_str(self.settings.cookies)
+            self._add_cookies()
+            self.settings.headers['Cookie'] = self._generate_str(self.settings.cookies)
             self.last_update_time = time()
 
-    def __add_cookies(self):
+    def _add_cookies(self):
         parameters = (MsToken.get_real_ms_token(), TtWid.get_tt_wid())
         for i in parameters:
             if isinstance(i, dict):
                 self.settings.cookies |= i
 
     @staticmethod
-    def __generate_str(cookies: dict):
+    def _generate_str(cookies: dict):
         '''根据 dict 生成 str'''
         if cookies:
             result = [f'{k}={v}' for k, v in cookies.items()]
             return '; '.join(result)
 
     @staticmethod
-    def __generate_dict_str(cookie: str):
+    def _generate_dict_str(cookie: str):
         '''根据 str 生成 dict'''
         cookies_key = frozenset({
             'passport_csrf_token',
