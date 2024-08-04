@@ -1,4 +1,5 @@
 pip install rich
 pip install requests
+pip install aiohttp
 pip install py_mini_racer
 pip install emoji
