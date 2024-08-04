@@ -1,4 +1,4 @@
-from os import makedirs, remove
+from os import makedirs
 from os.path import join as join_path, exists
 from rich.progress import (
     SpinnerColumn,
@@ -8,9 +8,11 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
-from requests import get, exceptions, Response
 from rich import print
 from time import time
+from asyncio import Semaphore, gather, run, create_task, sleep as sleep_asyncio
+from aiohttp import ClientSession, ClientResponse, ClientTimeout
+from random import randint
 
 from config import (
     GREEN, CYAN, YELLOW, MAGENTA,
@@ -34,12 +36,22 @@ class Download:
         '''下载作品文件'''
         print(f'[{CYAN}]\n开始下载作品文件\n')
         save_folder = self._create_save_folder(account_id, account_mark)
-        tasks = self._generate_task(items, save_folder)
+        tasks_info = self._generate_task(items, save_folder)
         with self._progress_object() as progress:
-            for task in tasks:
-                self._request_file(*task, progress=progress)
-                if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
-                    self.cookie.update()
+            run(self._download_files(tasks_info, progress))
+
+    async def _download_file(self, task_info: tuple, progress: Progress, sem: Semaphore):
+        await self._request_file(*task_info, progress, sem)
+        if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
+            self.cookie.update()
+
+    async def _download_files(self, tasks_info: list, progress: Progress):
+        sem = Semaphore(self.settings.concurrency)
+        tasks = []
+        for task_info in tasks_info:
+            task = create_task(self._download_file(task_info, progress, sem))
+            tasks.append(task)
+        await gather(*tasks)
 
     def _generate_task(self, items: list[dict], save_folder: str):
         '''生成下载任务信息列表并返回'''
@@ -50,9 +62,11 @@ class Download:
                 item[key] for key in self.settings.name_format))
             if (type := item['type']) == '图集':
                 for index, url in enumerate(item['downloads'].split(' '), start=1):
-                    tasks.append(self._generate_task_image(id, name, index, url, save_folder))
+                    if (task := self._generate_task_image(id, name, index, url, save_folder)) is not None:
+                        tasks.append(task)
             elif type == '视频':
-                tasks.append(self._generate_task_video(id, name, item, save_folder))
+                if (task := self._generate_task_video(id, name, item, save_folder)) is not None:
+                    tasks.append(task)
         return tasks
 
     def _generate_task_image(self, id: str, name: str, index: int, url: str, save_folder: str):
@@ -75,35 +89,29 @@ class Download:
             return (video['downloads'], path, f'视频 {id}', id)
 
     @retry
-    def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress):
+    async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
         '''下载 url 对应文件'''
-        try:
-            with get(url, stream=True, headers=self.settings.headers, timeout=self.settings.timeout) as response:
-                if not (content_length := int(response.headers.get('content-length', 0))):
-                    print(f'[{YELLOW}]{url} 响应内容为空')
-                elif response.status_code != 200 and response.status_code != 206:
-                    print(f'[{YELLOW}]{response.url} 响应码异常: {response.status_code}')
-                else:
-                    self._save_file(path, show, id, response, content_length, progress)
-                    return True
-        except (exceptions.ConnectionError, exceptions.ChunkedEncodingError, exceptions.ReadTimeout) as e:
-            print(f'[{YELLOW}]网络异常: {e}')
+        async with sem:
+            async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
+                async with session.get(url) as response:
+                    if not (content_length := int(response.headers.get('content-length', 0))):
+                        print(f'[{YELLOW}]{url} 响应内容为空')
+                    elif response.status != 200 and response.status != 206:
+                        print(f'[{YELLOW}]{response.url} 响应码异常: {response.status}')
+                    else:
+                        await self._save_file(path, show, id, response, content_length, progress)
+                        await sleep_asyncio(randint(3, 10)/10)
+                        return True
 
-    def _save_file(self, path: str, show: str, id: str, response: Response, content_length: int, progress: Progress):
+    async def _save_file(self, path: str, show: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
         task_id = progress.add_task(show, total=content_length or None)
-        try:
-            with open(path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=self.settings.chunk):
-                    f.write(chunk)
-                    progress.update(task_id, advance=len(chunk))
-                progress.remove_task(task_id)
-        except exceptions.ChunkedEncodingError:
+        with open(path, 'wb') as f:
+            async for chunk in response.content.iter_chunked(self.settings.chunk):
+                f.write(chunk)
+                progress.update(task_id, advance=len(chunk))
             progress.remove_task(task_id)
-            print(f'[{YELLOW}]{show} 由于网络异常下载中断')
-            remove(path)
-        else:
-            print(f'[{GREEN}]{show} 文件下载成功')
-            self.download_recorder.save(id)
+        print(f'[{GREEN}]{show} 文件下载成功')
+        self.download_recorder.save(id)
 
     def _progress_object(self):
         return Progress(

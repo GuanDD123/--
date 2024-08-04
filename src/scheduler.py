@@ -46,6 +46,7 @@ class Scheduler:
         if exists(cache_folder):
             account, items = self.download_items.read()
             if account and items:
+                self.cookie.update()
                 self.download_recorder.read()
                 print(f'[{CYAN}]开始提取上次未下载完作品数据')
                 account_id = account['id']
@@ -83,8 +84,8 @@ class Scheduler:
 
     def _deal_account(self, num: int, account: dict[str, str | date]):
         for i in (
-            f'[{CYAN}]\n开始处理第 {num} 个账号' if num else '开始处理账号',
-            f'[{CYAN}]最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}\n'
+            f'\n开始处理第 {num} 个账号' if num else '开始处理账号',
+            f'最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}\n'
         ):
             print(f'[{CYAN}{i}]')
         items = self.acquirer.request_items(account['sec_user_id'], account['earliest_date'])

@@ -40,6 +40,7 @@ class Settings:
         self.split = '-'
         self.chunk = 1024 ** 2  # 每次从服务器接收的数据块大小
         self.timeout = 10
+        self.concurrency = 5
         self.headers = {'Referer': 'https://www.douyin.com/', 'User-Agent': USER_AGENT}
         self.cookies = None
 
