@@ -10,9 +10,8 @@ from rich.progress import (
 )
 from rich import print
 from time import time
-from asyncio import Semaphore, gather, run, create_task, sleep as sleep_asyncio, TimeoutError
+from asyncio import Semaphore, gather, run, create_task, TimeoutError
 from aiohttp import ClientSession, ClientResponse, ClientTimeout
-from random import randint
 
 from config import (
     GREEN, CYAN, YELLOW, MAGENTA,
@@ -101,7 +100,6 @@ class Download:
                             print(f'[{YELLOW}]{response.url} 响应码异常: {response.status}')
                         else:
                             await self._save_file(path, show, id, response, content_length, progress)
-                            await sleep_asyncio(randint(3, 10)/10)
                             return True
             except TimeoutError:
                 print(f'[{YELLOW}]{url} 响应超时')
