@@ -10,7 +10,7 @@ from rich.progress import (
 )
 from rich import print
 from time import time
-from asyncio import Semaphore, gather, run, create_task, sleep as sleep_asyncio
+from asyncio import Semaphore, gather, run, create_task, sleep as sleep_asyncio, TimeoutError
 from aiohttp import ClientSession, ClientResponse, ClientTimeout
 from random import randint
 
@@ -92,16 +92,19 @@ class Download:
     async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
         '''下载 url 对应文件'''
         async with sem:
-            async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
-                async with session.get(url) as response:
-                    if not (content_length := int(response.headers.get('content-length', 0))):
-                        print(f'[{YELLOW}]{url} 响应内容为空')
-                    elif response.status != 200 and response.status != 206:
-                        print(f'[{YELLOW}]{response.url} 响应码异常: {response.status}')
-                    else:
-                        await self._save_file(path, show, id, response, content_length, progress)
-                        await sleep_asyncio(randint(3, 10)/10)
-                        return True
+            try:
+                async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
+                    async with session.get(url) as response:
+                        if not (content_length := int(response.headers.get('content-length', 0))):
+                            print(f'[{YELLOW}]{url} 响应内容为空')
+                        elif response.status != 200 and response.status != 206:
+                            print(f'[{YELLOW}]{response.url} 响应码异常: {response.status}')
+                        else:
+                            await self._save_file(path, show, id, response, content_length, progress)
+                            await sleep_asyncio(randint(3, 10)/10)
+                            return True
+            except TimeoutError:
+                print(f'[{YELLOW}]{url} 响应超时')
 
     async def _save_file(self, path: str, show: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
         task_id = progress.add_task(show, total=content_length or None)
