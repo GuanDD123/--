@@ -1,5 +1,6 @@
 from re import finditer
 from time import time
+from rich import print
 
 from .constant import CYAN, GREEN
 from .settings import Settings
@@ -12,7 +13,7 @@ class Cookie:
 
     def input_save(self):
         '''输入 cookie，转为 dict，保存到 Settings.cookies 属性中，并存入配置文件'''
-        while not (cookie := print(f'[{CYAN}]请粘贴 Cookie 内容: ')):
+        while not (cookie := input(f'请粘贴 Cookie 内容: ')):
             continue
         self.settings.cookies = self._generate_dict_str(cookie)
         self._check()

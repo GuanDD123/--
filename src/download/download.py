@@ -77,7 +77,7 @@ class Download:
             print(f'[{CYAN}]图集 {id}_{index} 文件已存在，跳过下载')
             print(f'[{CYAN}]文件路径: {path}')
         else:
-            return (url, path, f'图集 {id}_{index}', id)
+            return (url, path, f'图集 {id} {name}_{index}', id)
 
     def _generate_task_video(self, id: str, name: str, video: dict, save_folder: str):
         '''生成视频下载任务信息'''
@@ -85,7 +85,7 @@ class Download:
             print(f'[{CYAN}]视频 {id} 存在下载记录或文件已存在，跳过下载')
             print(f'[{CYAN}]文件路径: {path}')
         else:
-            return (video['downloads'], path, f'视频 {id}', id)
+            return (video['downloads'], path, f'视频 {id} {name}', id)
 
     @retry
     async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
@@ -96,8 +96,6 @@ class Download:
                     async with session.get(url) as response:
                         if not (content_length := int(response.headers.get('content-length', 0))):
                             print(f'[{YELLOW}]{url} 响应内容为空')
-                        elif response.status != 200 and response.status != 206:
-                            print(f'[{YELLOW}]{response.url} 响应码异常: {response.status}')
                         else:
                             await self._save_file(path, show, id, response, content_length, progress)
                             return True
