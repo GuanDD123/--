@@ -17,7 +17,7 @@ from config import (
     COOKIE_UPDATE_INTERVAL
 )
 from config import Settings, Cookie
-from tool import retry, Cleaner, retry_async
+from tool import retry, Cleaner
 from backup import DownloadRecorder
 
 
@@ -73,6 +73,7 @@ class Download:
         else:
             return (video['downloads'], path, name, id)
 
+    @retry
     def _request_file(self, url: str, path: str, name: str, id: str, progress: Progress):
             '''下载 url 对应文件'''
             try:
