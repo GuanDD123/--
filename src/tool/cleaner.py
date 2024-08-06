@@ -17,7 +17,7 @@ class Cleaner:
         '''根据系统类型生成默认非法字符集合'''
         now_system = system()
         if now_system in ('Windows', 'Darwin'):
-            rule = {'/', '\\', '|', '<', '>', '\'', '?', ':', '*', '\x00'}  # Windows 系统和 Mac 系统
+            rule = {'/', '\\', '|', '<', '>', '\'', '\"', '?', ':', '*', '\x00'}  # Windows 系统和 Mac 系统
         elif now_system == 'Linux':
             rule = {'/', '\x00'}  # Linux 系统
         else:

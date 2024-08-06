@@ -36,8 +36,10 @@ class Parse:
     def _extract_common(self, item: dict, result: dict):
         '''提取图文/视频作品共有信息'''
         result['id'] = self._extract_value(item, 'aweme_id')
-        result['desc'] = self.cleaner.clear_spaces(self.cleaner.filter_name(
-            self._extract_value(item, 'desc')))[:DESCRIPTION_LENGTH]
+        if desc:=self._extract_value(item, 'desc'):
+            result['desc'] = self.cleaner.clear_spaces(self.cleaner.filter_name(desc))[:DESCRIPTION_LENGTH]
+        else:
+            result['desc'] = '作品描述为空'
         result['create_timestamp'] = self._extract_value(item, 'create_time')
         result['create_time_date'] = date.fromtimestamp(int(result['create_timestamp']))
         result['create_time'] = date.strftime(result['create_time_date'], self.settings.date_format)

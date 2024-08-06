@@ -11,7 +11,7 @@ from random import randint
 from time import sleep
 from rich import print
 
-from config import MAGENTA, CYAN, YELLOW
+from config import MAGENTA, YELLOW
 from encrypt_params import get_a_bogus
 from tool import retry
 from config import Settings
@@ -35,7 +35,6 @@ class Acquire():
                 if (items_page := self._request_items_page(sec_user_id)):
                     items.extend(items_page)
                     self._early_stop(earliest)
-        print(f'[{CYAN}]当前账号获取作品数量: {len(items)}')
         return items
 
     def _progress_object(self):

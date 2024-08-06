@@ -58,58 +58,62 @@ class Download:
         tasks = []
         for item in items:
             id = item['id']
+            desc = item['desc']
             name = self.cleaner.filter_name(self.settings.split.join(
                 item[key] for key in self.settings.name_format))
             if (type := item['type']) == '图集':
                 for index, url in enumerate(item['downloads'].split(' '), start=1):
-                    if (task := self._generate_task_image(id, name, index, url, save_folder)) is not None:
+                    if (task := self._generate_task_image(id, desc, name, index, url, save_folder)) is not None:
                         tasks.append(task)
             elif type == '视频':
-                if (task := self._generate_task_video(id, name, item, save_folder)) is not None:
+                url = item['downloads']
+                if (task := self._generate_task_video(id, desc, name, url, save_folder)) is not None:
                     tasks.append(task)
         return tasks
 
-    def _generate_task_image(self, id: str, name: str, index: int, url: str, save_folder: str):
+    def _generate_task_image(self, id: str, desc: str, name: str, index: int, url: str, save_folder: str):
         '''生成图片下载任务信息'''
+        show = f'图集 {id} {desc[:15]}'
         if id in self.download_recorder.records:
-            print(f'[{CYAN}]{name} 存在下载记录，跳过下载')
+            print(f'[{CYAN}]{show} 存在下载记录，跳过下载')
         elif exists(path := join_path(save_folder, f'{name}_{index}.jpeg')):
-            print(f'[{CYAN}]{name} 文件已存在，跳过下载')
+            print(f'[{CYAN}]{show} 文件已存在，跳过下载')
         else:
-            return (url, path, name, id)
+            return (url, path, show, id)
 
-    def _generate_task_video(self, id: str, name: str, video: dict, save_folder: str):
+    def _generate_task_video(self, id: str, desc: str, name: str, url: str, save_folder: str):
         '''生成视频下载任务信息'''
+        show = f'视频 {id} {desc[:15]}'
         if (id in self.download_recorder.records) or exists(path := join_path(save_folder, f'{name}.mp4')):
-            print(f'[{CYAN}]{name} 存在下载记录或文件已存在，跳过下载')
+            print(f'[{CYAN}]{show} 存在下载记录或文件已存在，跳过下载')
         else:
-            return (video['downloads'], path, name, id)
+            return (url, path, show, id)
 
     @retry_async
-    async def _request_file(self, url: str, path: str, name: str, id: str, progress: Progress, sem: Semaphore):
+    async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
         '''下载 url 对应文件'''
         async with sem:
             try:
                 async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
                     async with session.get(URL(url, encoded=True)) as response:
                         if not (content_length := int(response.headers.get('content-length', 0))):
-                            print(f'[{YELLOW}]{name} {url} 响应内容为空')
+                            print(f'[{YELLOW}]{show} {url} 响应内容为空')
                         elif response.status != 200 and response.status != 206:
-                            print(f'[{YELLOW}]{name} {url} 响应状态码异常 {response.status}')
+                            print(f'[{YELLOW}]{show} {url} 响应状态码异常 {response.status}')
                         else:
-                            await self._save_file(path, name, id, response, content_length, progress)
+                            await self._save_file(path, show, id, response, content_length, progress)
                             return True
             except TimeoutError:
-                print(f'[{YELLOW}]{name} {url} 响应超时')
+                print(f'[{YELLOW}]{show} {url} 响应超时')
 
-    async def _save_file(self, path: str, name: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
-        task_id = progress.add_task(name, total=content_length or None)
+    async def _save_file(self, path: str, show: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
+        task_id = progress.add_task(show, total=content_length or None)
         with open(path, 'wb') as f:
             async for chunk in response.content.iter_chunked(self.settings.chunk):
                 f.write(chunk)
                 progress.update(task_id, advance=len(chunk))
             progress.remove_task(task_id)
-        print(f'[{GREEN}]{name} 文件下载成功')
+        print(f'[{GREEN}]{show} 下载成功')
         self.download_recorder.save(id)
 
     def _progress_object(self):

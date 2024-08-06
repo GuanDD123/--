@@ -38,8 +38,8 @@ class Settings:
         self.name_format = ('create_time', 'id', 'type', 'desc')  # 'id', 'desc', 'create_time', 'nickname', 'uid', 'mark', 'type'
         self.date_format = '%Y-%m-%d'
         self.split = '-'
-        self.chunk = 1024 ** 2  # 每次从服务器接收的数据块大小
-        self.timeout = 10
+        self.chunk = 1024 * 1024  # 每次从服务器接收的数据块大小
+        self.timeout = 60 * 2
         self.concurrency = 5
         self.headers = {'Referer': 'https://www.douyin.com/', 'User-Agent': USER_AGENT}
         self.cookies = None

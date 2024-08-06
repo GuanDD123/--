@@ -56,6 +56,9 @@ class Scheduler:
                     self.download_recorder.open_()
                     self.download.download_files(items, account_id, account_mark)
                     self.download_recorder.f_obj.close()
+            else:
+                self.download_recorder.delete()
+                self.download_items.delete()
         else:
             makedirs(cache_folder)
 
@@ -86,12 +89,12 @@ class Scheduler:
     def _deal_account(self, num: int, account: dict[str, str | date]):
         for i in (
             f'\n开始处理第 {num} 个账号' if num else '开始处理账号',
-            f'最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}\n'
+            f'账号标识：{account['mark'] or '空'}',
+            f'最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}'
         ):
-            print(f'[{CYAN}{i}]')
+            print(f'[{CYAN}]{i}')
         items = self.acquirer.request_items(account['sec_user_id'], account['earliest_date'])
         if not any(items):
-            print(f'[{YELLOW}]获取账号主页数据失败')
             return False
         else:
             print(f'[{CYAN}]开始提取作品数据')
@@ -100,6 +103,7 @@ class Scheduler:
             account_mark = account['mark']
             print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
             items = self.parse.extract_items(items, account['earliest_date'], account['latest_date'])
+            print(f'[{CYAN}]当前账号作品数量: {len(items)}')
             self.download_items.save(account, items)
             self.download_recorder.open_()
             self.download.download_files(items, account_id, account_mark)
