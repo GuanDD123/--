@@ -1,4 +1,4 @@
 from .function import (
-    retry
+    retry, retry_async
 )
 from .cleaner import Cleaner

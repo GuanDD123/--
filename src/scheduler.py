@@ -44,17 +44,18 @@ class Scheduler:
         cache_folder = join_path(PROJECT_ROOT, 'cache')
         self.running = self.settings.check()
         if exists(cache_folder):
-            account, items = self.download_items.read()
-            if account and items:
-                self.cookie.update()
-                self.download_recorder.read()
-                print(f'[{CYAN}]开始提取上次未下载完作品数据')
-                account_id = account['id']
-                account_mark = account['mark']
-                print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
-                self.download_recorder.open_()
-                self.download.download_files(items, account_id, account_mark)
-                self.download_recorder.f_obj.close()
+            if input('检测到程序上次未正常退出，是否提取上次下载信息：').lower() == 'y':
+                account, items = self.download_items.read()
+                if account and items:
+                    self.cookie.update()
+                    self.download_recorder.read()
+                    print(f'[{CYAN}]开始提取上次未下载完作品数据')
+                    account_id = account['id']
+                    account_mark = account['mark']
+                    print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
+                    self.download_recorder.open_()
+                    self.download.download_files(items, account_id, account_mark)
+                    self.download_recorder.f_obj.close()
         else:
             makedirs(cache_folder)
 

@@ -1,4 +1,4 @@
-from os import makedirs
+from os import makedirs, remove
 from os.path import join as join_path, exists
 from rich.progress import (
     SpinnerColumn,
@@ -10,15 +10,14 @@ from rich.progress import (
 )
 from rich import print
 from time import time
-from asyncio import Semaphore, gather, run, create_task, TimeoutError
-from aiohttp import ClientSession, ClientResponse, ClientTimeout
+from requests import get, exceptions, Response
 
 from config import (
     GREEN, CYAN, YELLOW, MAGENTA,
     COOKIE_UPDATE_INTERVAL
 )
 from config import Settings, Cookie
-from tool import retry, Cleaner
+from tool import retry, Cleaner, retry_async
 from backup import DownloadRecorder
 
 
@@ -37,20 +36,10 @@ class Download:
         save_folder = self._create_save_folder(account_id, account_mark)
         tasks_info = self._generate_task(items, save_folder)
         with self._progress_object() as progress:
-            run(self._download_files(tasks_info, progress))
-
-    async def _download_file(self, task_info: tuple, progress: Progress, sem: Semaphore):
-        await self._request_file(*task_info, progress, sem)
-        if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
-            self.cookie.update()
-
-    async def _download_files(self, tasks_info: list, progress: Progress):
-        sem = Semaphore(self.settings.concurrency)
-        tasks = []
-        for task_info in tasks_info:
-            task = create_task(self._download_file(task_info, progress, sem))
-            tasks.append(task)
-        await gather(*tasks)
+            for task_info in tasks_info:
+                self._request_file(*task_info, progress=progress)
+                if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
+                    self.cookie.update()
 
     def _generate_task(self, items: list[dict], save_folder: str):
         '''生成下载任务信息列表并返回'''
@@ -71,46 +60,48 @@ class Download:
     def _generate_task_image(self, id: str, name: str, index: int, url: str, save_folder: str):
         '''生成图片下载任务信息'''
         if id in self.download_recorder.records:
-            print(f'[{CYAN}]图集 {id} 存在下载记录，跳过下载')
-            print(f'[{CYAN}]文件路径: {path}')
+            print(f'[{CYAN}]{name} 存在下载记录，跳过下载')
         elif exists(path := join_path(save_folder, f'{name}_{index}.jpeg')):
-            print(f'[{CYAN}]图集 {id}_{index} 文件已存在，跳过下载')
-            print(f'[{CYAN}]文件路径: {path}')
+            print(f'[{CYAN}]{name} 文件已存在，跳过下载')
         else:
-            return (url, path, f'图集 {id} {name}_{index}', id)
+            return (url, path, name, id)
 
     def _generate_task_video(self, id: str, name: str, video: dict, save_folder: str):
         '''生成视频下载任务信息'''
         if (id in self.download_recorder.records) or exists(path := join_path(save_folder, f'{name}.mp4')):
-            print(f'[{CYAN}]视频 {id} 存在下载记录或文件已存在，跳过下载')
-            print(f'[{CYAN}]文件路径: {path}')
+            print(f'[{CYAN}]{name} 存在下载记录或文件已存在，跳过下载')
         else:
-            return (video['downloads'], path, f'视频 {id} {name}', id)
+            return (video['downloads'], path, name, id)
 
-    @retry
-    async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
-        '''下载 url 对应文件'''
-        async with sem:
+    def _request_file(self, url: str, path: str, name: str, id: str, progress: Progress):
+            '''下载 url 对应文件'''
             try:
-                async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
-                    async with session.get(url) as response:
-                        if not (content_length := int(response.headers.get('content-length', 0))):
-                            print(f'[{YELLOW}]{url} 响应内容为空')
-                        else:
-                            await self._save_file(path, show, id, response, content_length, progress)
-                            return True
-            except TimeoutError:
-                print(f'[{YELLOW}]{url} 响应超时')
+                with get(url, stream=True, headers=self.settings.headers, timeout=self.settings.timeout) as response:
+                    if not (content_length := int(response.headers.get('content-length', 0))):
+                        print(f'[{YELLOW}]{name} {url} 响应内容为空')
+                    elif response.status_code != 200 and response.status_code != 206:
+                        print(f'[{YELLOW}]{name} {response.url} 响应码异常: {response.status_code}')
+                    else:
+                        self._save_file(path, name, id, response, content_length, progress)
+                        return True
+            except (exceptions.ConnectionError, exceptions.ChunkedEncodingError, exceptions.ReadTimeout) as e:
+                print(f'[{YELLOW}]{name} 网络异常: {e}')
 
-    async def _save_file(self, path: str, show: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
-        task_id = progress.add_task(show, total=content_length or None)
-        with open(path, 'wb') as f:
-            async for chunk in response.content.iter_chunked(self.settings.chunk):
-                f.write(chunk)
-                progress.update(task_id, advance=len(chunk))
+    def _save_file(self, path: str, name: str, id: str, response: Response, content_length: int, progress: Progress):
+        task_id = progress.add_task(name, total=content_length or None)
+        try:
+            with open(path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=self.settings.chunk):
+                    f.write(chunk)
+                    progress.update(task_id, advance=len(chunk))
+                progress.remove_task(task_id)
+        except exceptions.ChunkedEncodingError:
             progress.remove_task(task_id)
-        print(f'[{GREEN}]{show} 文件下载成功')
-        self.download_recorder.save(id)
+            print(f'[{YELLOW}]{name} 由于网络异常下载中断')
+            remove(path)
+        else:
+            print(f'[{GREEN}]{name} 文件下载成功')
+            self.download_recorder.save(id)
 
     def _progress_object(self):
         return Progress(

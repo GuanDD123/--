@@ -20,7 +20,8 @@ MAGENTA = 'bright_magenta'
 DESCRIPTION_LENGTH = 64
 
 # 重新执行的最大次数
-RETRY = 5
+RETRY_ACCOUNT = 5
+RETRY_FILE = 1
 
 # Cookie 更新间隔，单位：秒
 COOKIE_UPDATE_INTERVAL = 10 * 60
