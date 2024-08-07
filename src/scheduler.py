@@ -72,8 +72,6 @@ class Scheduler:
         ):
             print(f'[{CYAN}]{i}')
         while (mode := input('\n请选择运行模式：').strip()).lower() != 'q':
-            if mode not in ('1', '2'):
-                continue
             if mode == '1':
                 self.cookie.input_save()
             elif mode == '2':
