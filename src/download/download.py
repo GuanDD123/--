@@ -112,7 +112,7 @@ class Download:
             async for chunk in response.content.iter_chunked(self.settings.chunk):
                 f.write(chunk)
                 progress.update(task_id, advance=len(chunk))
-            progress.remove_task(task_id)
+        progress.remove_task(task_id)
         print(f'[{GREEN}]{show} 下载成功')
         self.download_recorder.save(id)
 
