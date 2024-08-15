@@ -1,6 +1,5 @@
 from platform import system
 from string import whitespace
-from emoji import replace_emoji
 from rich import print
 
 from config import YELLOW
@@ -33,8 +32,7 @@ class Cleaner:
     def filter_name(self, text: str, inquire=False, default: str = ''):
         '''去除非法字符'''
         for i in self.rule:
-            text = text.replace(i, '')
-        text = replace_emoji(text)
+            text = text.replace(i, ' ')
         text = text.strip().strip('.')
 
         if inquire:
