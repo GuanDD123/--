@@ -62,16 +62,18 @@ class Download:
             name = self.cleaner.filter_name(self.settings.split.join(
                 item[key] for key in self.settings.name_format))
             if (type := item['type']) == '图集':
-                for index, url in enumerate(item['downloads'].split(' '), start=1):
-                    if (task := self._generate_task_image(id, desc, name, index, url, save_folder)) is not None:
+                for index, info in enumerate(item['downloads'], start=1):
+                    if (task := self._generate_task_image(id, desc, name, index, info[0], info[1], info[2], save_folder)) is not None:
                         tasks.append(task)
             elif type == '视频':
                 url = item['downloads']
-                if (task := self._generate_task_video(id, desc, name, url, save_folder)) is not None:
+                width = item['width']
+                height = item['height']
+                if (task := self._generate_task_video(id, desc, name, url, width, height, save_folder)) is not None:
                     tasks.append(task)
         return tasks
 
-    def _generate_task_image(self, id: str, desc: str, name: str, index: int, url: str, save_folder: str):
+    def _generate_task_image(self, id: str, desc: str, name: str, index: int, url: str, width: int, height: int, save_folder: str):
         '''生成图片下载任务信息'''
         show = f'图集 {id} {desc[:15]}'
         if id in self.download_recorder.records:
@@ -79,18 +81,19 @@ class Download:
         elif exists(path := join_path(save_folder, f'{name}_{index}.jpeg')):
             print(f'[{CYAN}]{show} 文件已存在，跳过下载')
         else:
-            return (url, path, show, id)
+            return (url, path, show, id, width, height)
 
-    def _generate_task_video(self, id: str, desc: str, name: str, url: str, save_folder: str):
+    def _generate_task_video(self, id: str, desc: str, name: str, url: str, width: int, height: int, save_folder: str):
         '''生成视频下载任务信息'''
         show = f'视频 {id} {desc[:15]}'
         if (id in self.download_recorder.records) or exists(path := join_path(save_folder, f'{name}.mp4')):
             print(f'[{CYAN}]{show} 存在下载记录或文件已存在，跳过下载')
         else:
-            return (url, path, show, id)
+            return (url, path, show, id, width, height)
 
     @retry_async
-    async def _request_file(self, url: str, path: str, show: str, id: str, progress: Progress, sem: Semaphore):
+    async def _request_file(self, url: str, path: str, show: str, id: str, width: int, height: int,
+                            progress: Progress, sem: Semaphore):
         '''下载 url 对应文件'''
         async with sem:
             try:
@@ -101,19 +104,24 @@ class Download:
                         elif response.status != 200 and response.status != 206:
                             print(f'[{YELLOW}]{show} {url} 响应状态码异常 {response.status}')
                         else:
-                            await self._save_file(path, show, id, response, content_length, progress)
+                            await self._save_file(path, show, id, width, height, response, content_length, progress)
                             return True
             except TimeoutError:
                 print(f'[{YELLOW}]{show} {url} 响应超时')
 
-    async def _save_file(self, path: str, show: str, id: str, response: ClientResponse, content_length: int, progress: Progress):
+    async def _save_file(self, path: str, show: str, id: str, width: int, height: int,
+                         response: ClientResponse, content_length: int, progress: Progress):
         task_id = progress.add_task(show, total=content_length or None)
         with open(path, 'wb') as f:
             async for chunk in response.content.iter_chunked(self.settings.chunk):
                 f.write(chunk)
                 progress.update(task_id, advance=len(chunk))
         progress.remove_task(task_id)
-        print(f'[{GREEN}]{show} 下载成功')
+        if max(width, height) < 1920:
+            color = YELLOW
+        else:
+            color = GREEN
+        print(f'[{GREEN}]{show} [{color}]清晰度：{width}×{height} [{GREEN}]下载成功')
         self.download_recorder.save(id)
 
     def _progress_object(self):

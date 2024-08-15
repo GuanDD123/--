@@ -49,7 +49,7 @@ class Scheduler:
                 if account and items:
                     self.cookie.update()
                     self.download_recorder.read()
-                    print(f'[{CYAN}]开始提取上次未下载完作品数据')
+                    print(f'[{CYAN}]\n开始提取上次未下载完作品数据')
                     account_id = account['id']
                     account_mark = account['mark']
                     print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
@@ -96,7 +96,7 @@ class Scheduler:
         if not any(items):
             return False
         else:
-            print(f'[{CYAN}]开始提取作品数据')
+            print(f'[{CYAN}]\n开始提取作品数据')
             self.parse.extract_account(account, items[0])
             account_id = account['id']
             account_mark = account['mark']

@@ -48,8 +48,12 @@ class Parse:
         '''提取图文作品信息'''
         result['type'] = '图集'
         result['share_url'] = f'https://www.douyin.com/note/{result['id']}'
-        result['downloads'] = ' '.join(
-            self._extract_value(image, 'url_list[0]') for image in gallery)
+        result['downloads'] = []
+        for image in gallery:
+            url = self._extract_value(image, 'url_list[0]')
+            width = self._extract_value(image, 'width')
+            height = self._extract_value(image, 'height')
+            result['downloads'].append((url, width, height))
 
     def _extract_video(self, video: dict, result: dict):
         '''提取视频作品信息'''
@@ -57,13 +61,8 @@ class Parse:
         result['share_url'] = f'https://www.douyin.com/video/{result['id']}'
         result['downloads'] = self._extract_value(
             video, 'play_addr.url_list[0]')
-        result['uri'] = self._extract_value(
-            video, 'play_addr.uri')
-        result['duration'] = self._duration_conversion(
-            self._extract_value(video, 'duration'))
         result['height'] = self._extract_value(video, 'height')
         result['width'] = self._extract_value(video, 'width')
-        result['ratio'] = self._extract_value(video, 'ratio')
 
     @staticmethod
     def _duration_conversion(duration: int):
