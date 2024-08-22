@@ -88,8 +88,8 @@ class Scheduler:
     def _deal_account(self, num: int, account: dict[str, str | date]):
         for i in (
             f'\n开始处理第 {num} 个账号' if num else '开始处理账号',
-            f'账号标识：{account['mark'] or '空'}',
-            f'最早发布日期：{account['earliest'] or '空'}，最晚发布日期：{account['latest'] or '空'}'
+            f'账号标识：{account["mark"] or "空"}',
+            f'最早发布日期：{account["earliest"] or "空"}，最晚发布日期：{account["latest"] or "空"}'
         ):
             print(f'[{CYAN}]{i}')
         items = self.acquirer.request_items(account['sec_user_id'], account['earliest_date'])

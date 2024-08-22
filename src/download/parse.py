@@ -47,7 +47,7 @@ class Parse:
     def _extract_gallery(self, gallery: dict, result: dict):
         '''提取图文作品信息'''
         result['type'] = '图集'
-        result['share_url'] = f'https://www.douyin.com/note/{result['id']}'
+        result['share_url'] = f'https://www.douyin.com/note/{result["id"]}'
         result['downloads'] = []
         for image in gallery:
             url = self._extract_value(image, 'url_list[0]')
@@ -58,7 +58,7 @@ class Parse:
     def _extract_video(self, video: dict, result: dict):
         '''提取视频作品信息'''
         result['type'] = '视频'
-        result['share_url'] = f'https://www.douyin.com/video/{result['id']}'
+        result['share_url'] = f'https://www.douyin.com/video/{result["id"]}'
         result['downloads'] = self._extract_value(
             video, 'play_addr.url_list[0]')
         result['height'] = self._extract_value(video, 'height')
