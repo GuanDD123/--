@@ -11,7 +11,7 @@ from random import randint
 from time import sleep
 from rich import print
 
-from config import MAGENTA, YELLOW
+from config import MAGENTA, YELLOW, TIMEOUT
 from encrypt_params import get_a_bogus
 from tool import retry
 from config import Settings
@@ -89,11 +89,12 @@ class Acquire():
                 self.finished = True
 
     def _send_get(self, params):
+        '''返回 json 格式数据'''
         try:
             response = get(
                 self.post_api,
                 params=params,
-                timeout=self.settings.timeout,
+                timeout=TIMEOUT,
                 headers=self.settings.headers)
             self._wait()
         except (
@@ -121,9 +122,8 @@ class Acquire():
 
     def _deal_url_params(self, params: dict, number: int = 8):
         '''添加 msToken、X-Bogus'''
-        cookies = self.settings.cookies
-        if isinstance(cookies, dict) and 'msToken' in cookies:
-            params['msToken'] = cookies['msToken']
+        if 'msToken' in self.settings.cookies:
+            params['msToken'] = self.settings.cookies['msToken']
         params['a_bogus'] = get_a_bogus(params)
 
     def _early_stop(self, earliest: date):

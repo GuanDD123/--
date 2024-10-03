@@ -16,7 +16,8 @@ from aiohttp import ClientSession, ClientResponse, ClientTimeout
 
 from config import (
     GREEN, CYAN, YELLOW, MAGENTA,
-    COOKIE_UPDATE_INTERVAL
+    COOKIE_UPDATE_INTERVAL,
+    CHUNK, TIMEOUT, CONCURRENCY
 )
 from config import Settings, Cookie
 from tool import Cleaner, retry_async
@@ -24,7 +25,6 @@ from backup import DownloadRecorder
 
 
 class Download:
-
     def __init__(self, settings: Settings, cleaner: Cleaner, cookie: Cookie,
                  download_recorder: DownloadRecorder):
         self.download_recorder = download_recorder
@@ -46,7 +46,7 @@ class Download:
             self.cookie.update()
 
     async def _download_files(self, tasks_info: list, progress: Progress):
-        sem = Semaphore(self.settings.concurrency)
+        sem = Semaphore(CONCURRENCY)
         tasks = []
         for task_info in tasks_info:
             task = create_task(self._download_file(task_info, progress, sem))
@@ -86,8 +86,10 @@ class Download:
     def _generate_task_video(self, id: str, desc: str, name: str, url: str, width: int, height: int, save_folder: str):
         '''生成视频下载任务信息'''
         show = f'视频 {id} {desc[:15]}'
-        if (id in self.download_recorder.records) or exists(path := join_path(save_folder, f'{name}.mp4')):
-            print(f'[{CYAN}]{show} 存在下载记录或文件已存在，跳过下载')
+        if id in self.download_recorder.records:
+            print(f'[{CYAN}]{show} 存在下载记录，跳过下载')
+        elif exists(path := join_path(save_folder, f'{name}.mp4')):
+            print(f'[{CYAN}]{show} 文件已存在，跳过下载')
         else:
             return (url, path, show, id, width, height)
 
@@ -97,7 +99,7 @@ class Download:
         '''下载 url 对应文件'''
         async with sem:
             try:
-                async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(self.settings.timeout)) as session:
+                async with ClientSession(headers=self.settings.headers, timeout=ClientTimeout(TIMEOUT)) as session:
                     async with session.get(URL(url, encoded=True)) as response:
                         if not (content_length := int(response.headers.get('content-length', 0))):
                             print(f'[{YELLOW}]{show} {url} 响应内容为空')
@@ -113,7 +115,7 @@ class Download:
                          response: ClientResponse, content_length: int, progress: Progress):
         task_id = progress.add_task(show, total=content_length or None)
         with open(path, 'wb') as f:
-            async for chunk in response.content.iter_chunked(self.settings.chunk):
+            async for chunk in response.content.iter_chunked(CHUNK):
                 f.write(chunk)
                 progress.update(task_id, advance=len(chunk))
         progress.remove_task(task_id)

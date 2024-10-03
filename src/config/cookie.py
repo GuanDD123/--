@@ -15,32 +15,33 @@ class Cookie:
         '''输入 cookie，转为 dict，保存到 Settings.cookies 属性中，并存入配置文件'''
         while not (cookie := input(f'请粘贴 Cookie 内容: ')):
             continue
-        self.settings.cookies = self._generate_dict_str(cookie)
+        self.settings.cookies = self._generate_dict(cookie)
         self._check()
         self._save()
 
-    def _check(self):
-        '''检查 Settings.cookies 是否已登录；删除空键值对'''
-        cookies = self.settings.cookies
-        if not cookies['sessionid_ss']:
-            print(f'[{CYAN}]当前 Cookie 未登录')
-        else:
-            print(f'[{CYAN}]当前 Cookie 已登录')
-        keys_to_remove = [key for key, value in cookies.items() if value is None]
-        for key in keys_to_remove:
-            del cookies[key]
-
-    def _save(self):
-        '''将 Settings.cookies 存储到 settings.json'''
-        self.settings.save()
-        print(f'[{GREEN}]写入 Cookie 成功！')
-
     def update(self):
-        '''更新 Settings.cookies 与 Settings.headers'''
+        '''更新 Settings.cookies 与 Settings.headers，获取更新时间'''
         if self.settings.cookies:
             self._add_cookies()
             self.settings.headers['Cookie'] = self._generate_str(self.settings.cookies)
             self.last_update_time = time()
+
+    def _check(self):
+        '''检查 Settings.cookies 是否已登录；删除空键值对'''
+        if not self.settings.cookies['sessionid_ss']:
+            print(f'[{CYAN}]当前 Cookie 未登录')
+        else:
+            print(f'[{CYAN}]当前 Cookie 已登录')
+
+        keys_to_remove = [key for key, value in self.settings.cookies.items() if value is None]
+        for key in keys_to_remove:
+            del self.settings.cookies[key]
+
+    def _save(self):
+        '''将 Settings.cookies 存储到 settings.json'''
+        self.settings.settings['cookies'] = self.settings.cookies
+        self.settings.save()
+        print(f'[{GREEN}]写入 Cookie 成功！')
 
     def _add_cookies(self):
         parameters = (MsToken.get_real_ms_token(), TtWid.get_tt_wid())
@@ -56,9 +57,9 @@ class Cookie:
             return '; '.join(result)
 
     @staticmethod
-    def _generate_dict_str(cookie: str):
+    def _generate_dict(cookie: str):
         '''根据 str 生成 dict'''
-        cookies_key = frozenset({
+        cookies_key = {
             'passport_csrf_token',
             'passport_csrf_token_default',
             'my_rd',
@@ -115,7 +116,7 @@ class Cookie:
             'xgplayer_user_id',
             '__ac_signature',
             'tt_scid'
-        })
+        }
         cookies = {}.fromkeys(cookies_key)
         matches = finditer(r'(?P<key>[^=;,]+)=(?P<value>[^;,]+)', cookie)
         for match in matches:

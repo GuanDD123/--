@@ -12,7 +12,7 @@ from config import (
     PROJECT_ROOT,
     COOKIE_UPDATE_INTERVAL,
     TEXT_REPLACEMENT,
-    YELLOW, WHITE, CYAN
+    WHITE, CYAN
 )
 from config import Settings, Cookie
 from tool import Cleaner
@@ -21,7 +21,6 @@ from backup import DownloadRecorder, DownloadItems
 
 
 class Scheduler:
-
     def __init__(self) -> None:
         self.download_recorder = DownloadRecorder()
         self.download_items = DownloadItems()
@@ -31,7 +30,6 @@ class Scheduler:
         self.parse = Parse(self.cleaner, self.settings)
         self.download = Download(self.settings, self.cleaner, self.cookie, self.download_recorder)
         self.acquirer = Acquire(self.settings)
-        self.running = True
 
     def run(self):
         self.check_config()
@@ -41,9 +39,9 @@ class Scheduler:
 
     def check_config(self):
         self.cleaner.set_rule(TEXT_REPLACEMENT)
-        cache_folder = join_path(PROJECT_ROOT, 'cache')
+        self.cache_folder = join_path(PROJECT_ROOT, 'cache')
         self.running = self.settings.check()
-        if exists(cache_folder):
+        if exists(self.cache_folder):
             if input('检测到程序上次未正常退出，是否提取上次下载信息：').lower() == 'y':
                 account, items = self.download_items.read()
                 if account and items:
@@ -60,7 +58,7 @@ class Scheduler:
                 self.download_recorder.delete()
                 self.download_items.delete()
         else:
-            makedirs(cache_folder)
+            makedirs(self.cache_folder)
 
     def main_menu(self):
         self.cookie.update()
@@ -76,6 +74,12 @@ class Scheduler:
                 self.cookie.input_save()
             elif mode == '2':
                 self._deal_accounts()
+
+    def close(self):
+        rmtree(self.cache_folder)
+        self.download_recorder.delete()
+        self.download_items.delete()
+        print(f'[{WHITE}]程序结束运行')
 
     def _deal_accounts(self):
         accounts = self.settings.accounts
@@ -93,9 +97,7 @@ class Scheduler:
         ):
             print(f'[{CYAN}]{i}')
         items = self.acquirer.request_items(account['sec_user_id'], account['earliest_date'])
-        if not any(items):
-            return False
-        else:
+        if items:
             print(f'[{CYAN}]\n开始提取作品数据')
             self.parse.extract_account(account, items[0])
             account_id = account['id']
@@ -108,9 +110,3 @@ class Scheduler:
             self.download.download_files(items, account_id, account_mark)
             self.download_recorder.f_obj.close()
             return True
-
-    def close(self):
-        rmtree(join_path(PROJECT_ROOT, 'cache'))
-        self.download_recorder.delete()
-        self.download_items.delete()
-        print(f'[{WHITE}]程序结束运行')

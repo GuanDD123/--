@@ -5,7 +5,6 @@ from config import Settings, DESCRIPTION_LENGTH
 
 
 class Parse:
-
     def __init__(self, cleaner: Cleaner, settings: Settings) -> None:
         self.cleaner = cleaner
         self.settings = settings
@@ -25,12 +24,14 @@ class Parse:
         for item in items:
             result = {}
             self._extract_common(item, result)
-            if result['create_time_date'] <= latest and result['create_time_date'] >= earliest:
-                if gallery := self._extract_value(item, 'images'):
-                    self._extract_gallery(gallery, result)
-                else:
+            if (result['create_time_date'] <= latest) and (result['create_time_date'] >= earliest):
+                if (gallery := self._extract_value(item, 'images')):
+                    if self.settings.download_images:
+                        self._extract_gallery(gallery, result)
+                        results.append(result)
+                elif self.settings.download_videos:
                     self._extract_video(self._extract_value(item, 'video'), result)
-                results.append(result)
+                    results.append(result)
         return results
 
     def _extract_common(self, item: dict, result: dict):
@@ -63,14 +64,6 @@ class Parse:
             video, 'play_addr.url_list[0]')
         result['height'] = self._extract_value(video, 'height')
         result['width'] = self._extract_value(video, 'width')
-
-    @staticmethod
-    def _duration_conversion(duration: int):
-        '''将以 ms 为单位的时长转化为 时:分:秒 的形式'''
-        return f'{
-            duration // 1000 // 3600:0>2d}:{
-            duration // 1000 % 3600 // 60:0>2d}:{
-            duration // 1000 % 3600 % 60:0>2d}'
 
     @staticmethod
     def _extract_value(data: dict, attribute_chain: str):

@@ -6,7 +6,10 @@ from .constant import (
     COOKIE_UPDATE_INTERVAL,
     TEXT_REPLACEMENT,
     DESCRIPTION_LENGTH,
-    WHITE, YELLOW, GREEN, RED, CYAN, MAGENTA
+    WHITE, YELLOW, GREEN, RED, CYAN, MAGENTA,
+    CHUNK,
+    TIMEOUT,
+    CONCURRENCY
 )
 from .cookie import Cookie
 from .settings import Settings

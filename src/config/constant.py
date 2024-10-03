@@ -27,4 +27,13 @@ RETRY_FILE = 2
 COOKIE_UPDATE_INTERVAL = 10 * 60
 
 # 非法字符集合
-TEXT_REPLACEMENT = frozenset({})
+TEXT_REPLACEMENT = frozenset()
+
+# 每次从服务器接收的数据块大小
+CHUNK = 1024 * 1024
+
+# 请求超时时间
+TIMEOUT = 60 * 2
+
+# 文件下载最大协程数
+CONCURRENCY = 5
