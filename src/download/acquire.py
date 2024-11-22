@@ -11,10 +11,10 @@ from random import randint
 from time import sleep
 from rich import print
 
-from config import MAGENTA, YELLOW, TIMEOUT
-from encrypt_params import get_a_bogus
-from tool import retry
-from config import Settings
+from ..config import MAGENTA, YELLOW, TIMEOUT
+from ..encrypt_params import get_a_bogus
+from ..tool import retry
+from ..config import Settings
 
 
 class Acquire():

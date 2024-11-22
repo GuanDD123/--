@@ -1,7 +1,7 @@
 from datetime import date
 
-from tool import Cleaner
-from config import Settings, DESCRIPTION_LENGTH
+from ..tool import Cleaner
+from ..config import Settings, DESCRIPTION_LENGTH
 
 
 class Parse:

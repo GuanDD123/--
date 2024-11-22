@@ -4,8 +4,8 @@ from requests import (
 )
 from rich import print
 
-from config import USER_AGENT, RED
-from tool import retry
+from ..config import USER_AGENT, RED
+from ..tool import retry
 
 
 HEADERS = {'User-Agent': USER_AGENT}

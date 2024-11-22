@@ -2,7 +2,7 @@ from platform import system
 from string import whitespace
 from rich import print
 
-from config import YELLOW
+from ..config import YELLOW
 
 
 class Cleaner:

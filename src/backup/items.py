@@ -6,7 +6,7 @@ from os import remove
 from json import dump, load
 from rich import print
 
-from config import (
+from ..config import (
     PROJECT_ROOT,
     ENCODE,
     YELLOW

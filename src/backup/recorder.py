@@ -5,7 +5,7 @@ from os.path import (
 from os import remove
 from rich import print
 
-from config import (
+from ..config import (
     YELLOW,
     PROJECT_ROOT,
     ENCODE

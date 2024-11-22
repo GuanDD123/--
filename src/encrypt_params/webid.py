@@ -3,7 +3,7 @@ from json import dumps
 from rich import print
 
 from .general import send_post
-from config import USER_AGENT, RED
+from ..config import USER_AGENT, RED
 
 
 class WebID:

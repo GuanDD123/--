@@ -7,17 +7,18 @@ from shutil import rmtree
 from datetime import date
 from rich import print
 from time import time
+import subprocess
 
-from config import (
+from .config import (
     PROJECT_ROOT,
     COOKIE_UPDATE_INTERVAL,
     TEXT_REPLACEMENT,
     WHITE, CYAN
 )
-from config import Settings, Cookie
-from tool import Cleaner
-from download import Acquire, Download, Parse
-from backup import DownloadRecorder, DownloadItems
+from .config import Settings, Cookie
+from .tool import Cleaner
+from .download import Acquire, Download, Parse
+from .backup import DownloadRecorder, DownloadItems
 
 
 class Scheduler:
@@ -65,7 +66,9 @@ class Scheduler:
         for i in (
             '='*25,
             '1. 复制粘贴写入 Cookie',
-            '2. 批量下载账号作品(配置文件)',
+            '2. 修改配置文件(Linux)',
+            '='*25,
+            '3. 批量下载账号作品(配置文件)',
             '='*25,
         ):
             print(f'[{CYAN}]{i}')
@@ -73,6 +76,14 @@ class Scheduler:
             if mode == '1':
                 self.cookie.input_save()
             elif mode == '2':
+                subprocess.run(['xdg-open', self.settings.file])
+                try:
+                    subprocess.run(['xdg-open', join_path(PROJECT_ROOT, '已下载账号信息.json')])
+                except:
+                    pass
+                input()
+                break
+            elif mode == '3':
                 self._deal_accounts()
 
     def close(self):

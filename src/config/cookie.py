@@ -4,7 +4,7 @@ from rich import print
 
 from .constant import CYAN, GREEN
 from .settings import Settings
-from encrypt_params import MsToken, TtWid
+from ..encrypt_params import MsToken, TtWid
 
 
 class Cookie:

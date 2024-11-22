@@ -14,14 +14,14 @@ from yarl import URL
 from asyncio import Semaphore, gather, run, create_task, TimeoutError
 from aiohttp import ClientSession, ClientResponse, ClientTimeout
 
-from config import (
+from ..config import (
     GREEN, CYAN, YELLOW, MAGENTA,
     COOKIE_UPDATE_INTERVAL,
     CHUNK, TIMEOUT, CONCURRENCY
 )
-from config import Settings, Cookie
-from tool import Cleaner, retry_async
-from backup import DownloadRecorder
+from ..config import Settings, Cookie
+from ..tool import Cleaner, retry_async
+from ..backup import DownloadRecorder
 
 
 class Download:

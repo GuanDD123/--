@@ -1,4 +1,4 @@
-from config import RETRY_ACCOUNT, RETRY_FILE
+from ..config import RETRY_ACCOUNT, RETRY_FILE
 
 def retry(function):
     '''发生错误时尝试重新执行'''
