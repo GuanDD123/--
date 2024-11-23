@@ -49,7 +49,6 @@ class Settings:
         self.settings = self._read()
         if self.settings:
             if set(self.default_settings.keys()) <= (set(self.settings.keys())):
-                self.quit = False
                 self._check_accounts()
                 self._check_cookies()
                 self._check_save_folder()
@@ -57,12 +56,8 @@ class Settings:
                 self._check_name()
             else:
                 print(f'[{RED}]配置文件 settings.json 缺少必要的参数！')
-                self.quit = True
                 if input('是否生成默认配置文件？Y/N：').lower() == 'y':
                     self._create()
-        else:
-            self.quit = True
-        return False if self.quit else True
 
     def save(self):
         '''将 self.settings 覆写到配置文件'''
@@ -115,17 +110,17 @@ class Settings:
             account['sec_user_id'] = self._extract_sec_user_id(account['mark'], account['url'])
             account['earliest_date'] = self._generate_date_earliest(account['earliest'])
             account['latest_date'] = self._generate_date_latest(account['latest'])
-            if self.quit:
+            if account['sec_user_id'] is None:
                 break
 
-    def _extract_sec_user_id(self, mark: str, url: str):
+    def _extract_sec_user_id(self, mark: str, url: str) -> str | None:
         sec_user_id = match(
             r'https://www\.douyin\.com/user/([A-Za-z0-9_-]+)(\?.*)?', url).group(1)
         if sec_user_id:
             return sec_user_id
         else:
             print(f'[{RED}]参数 accounts 中账号 {mark} 的 url {url} 错误，提取 sec_user_id 失败！')
-            self.quit = True
+            return
 
     def _generate_date_earliest(self, date_: str):
         if not date_:

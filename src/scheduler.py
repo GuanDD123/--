@@ -34,32 +34,13 @@ class Scheduler:
 
     def run(self):
         self.check_config()
-        if self.running:
-            self.main_menu()
+        self.main_menu()
         self.close()
 
     def check_config(self):
         self.cleaner.set_rule(TEXT_REPLACEMENT)
         self.cache_folder = join_path(PROJECT_ROOT, 'cache')
-        self.running = self.settings.check()
-        if exists(self.cache_folder):
-            if input('检测到程序上次未正常退出，是否提取上次下载信息：').lower() == 'y':
-                account, items = self.download_items.read()
-                if account and items:
-                    self.cookie.update()
-                    self.download_recorder.read()
-                    print(f'[{CYAN}]\n开始提取上次未下载完作品数据')
-                    account_id = account['id']
-                    account_mark = account['mark']
-                    print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
-                    self.download_recorder.open_()
-                    self.download.download_files(items, account_id, account_mark)
-                    self.download_recorder.f_obj.close()
-            else:
-                self.download_recorder.delete()
-                self.download_items.delete()
-        else:
-            makedirs(self.cache_folder)
+        self.settings.check()
 
     def main_menu(self):
         self.cookie.update()
@@ -82,15 +63,38 @@ class Scheduler:
                 except:
                     pass
                 input()
-                break
+                self.settings.check()
             elif mode == '3':
+                if exists(self.cache_folder):
+                    self._continue_last_download()
+                else:
+                    makedirs(self.cache_folder)
                 self._deal_accounts()
 
     def close(self):
-        rmtree(self.cache_folder)
-        self.download_recorder.delete()
-        self.download_items.delete()
-        print(f'[{WHITE}]程序结束运行')
+        try:
+            rmtree(self.cache_folder)
+            self.download_recorder.delete()
+            self.download_items.delete()
+        finally:
+            print(f'[{WHITE}]程序结束运行')
+
+    def _continue_last_download(self):
+        if input('检测到程序上次未正常退出，是否提取上次下载信息：').lower() == 'y':
+            account, items = self.download_items.read()
+            if account and items:
+                self.cookie.update()
+                self.download_recorder.read()
+                print(f'[{CYAN}]\n开始提取上次未下载完作品数据')
+                account_id = account['id']
+                account_mark = account['mark']
+                print(f'[{CYAN}]账号标识：{account_mark}；账号 ID：{account_id}')
+                self.download_recorder.open_()
+                self.download.download_files(items, account_id, account_mark)
+                self.download_recorder.f_obj.close()
+        else:
+            self.download_recorder.delete()
+            self.download_items.delete()
 
     def _deal_accounts(self):
         accounts = self.settings.accounts
