@@ -24,7 +24,7 @@ RETRY_ACCOUNT = 5
 RETRY_FILE = 2
 
 # Cookie 更新间隔，单位：秒
-COOKIE_UPDATE_INTERVAL = 10 * 60
+COOKIE_UPDATE_INTERVAL = 60 * 10
 
 # 非法字符集合
 TEXT_REPLACEMENT = frozenset()
@@ -33,7 +33,7 @@ TEXT_REPLACEMENT = frozenset()
 CHUNK = 1024 * 1024
 
 # 请求超时时间
-TIMEOUT = 60 * 2
+TIMEOUT = 60 * 5
 
 # 文件下载最大协程数
 CONCURRENCY = 5
