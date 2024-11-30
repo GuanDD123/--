@@ -40,7 +40,7 @@ class Scheduler:
     def check_config(self):
         self.cleaner.set_rule(TEXT_REPLACEMENT)
         self.cache_folder = join_path(PROJECT_ROOT, 'cache')
-        self.settings.check()
+        self.settings.load_settings()
 
     def main_menu(self):
         self.cookie.update()
@@ -63,7 +63,7 @@ class Scheduler:
                 except:
                     pass
                 input()
-                self.settings.check()
+                self.settings.load_settings()
             elif mode == '3':
                 if exists(self.cache_folder):
                     self._continue_last_download()
