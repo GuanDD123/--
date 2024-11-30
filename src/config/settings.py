@@ -30,7 +30,7 @@ class Settings:
             },
         ],
         'cookies': {},
-        'save_folder': '',
+        'save_folder': PROJECT_ROOT,
         'download_videos': 'True',
         'download_images': 'False',
         'name_format': 'create_time id type desc',
@@ -72,16 +72,16 @@ class Settings:
         self.name_format = str(self.settings['name_format']).split()
         if (not self.name_format) or (
                 not set(self.name_format) <= {'id', 'desc', 'create_time', 'type'}):
-            self.name_format = ['create_time', 'id', 'type', 'desc']
+            self.name_format = self.default_settings['name_format'].split()
 
-        self.split = str(self.settings['split']) or '-'
-        self.date_format = str(self.settings['date_format']) or '%Y-%m-%d'
+        self.split = str(self.settings['split']) or self.default_settings['split']
+        self.date_format = str(self.settings['date_format']) or self.default_settings['date_format']
 
     def _load_save_folder(self):
         self.save_folder = str(self.settings['save_folder'])
         if not self.save_folder:
-            print(f'[{YELLOW}]参数 "save_folder" 未设置，将使用默认存储位置 {PROJECT_ROOT}！')
-            self.save_folder = PROJECT_ROOT
+            print(f'[{YELLOW}]参数 "save_folder" 未设置，将使用默认存储位置 {self.default_settings['save_folder']}！')
+            self.save_folder = self.default_settings['save_folder']
         elif not exists(self.save_folder):
             makedirs(self.save_folder)
 
