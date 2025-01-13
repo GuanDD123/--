@@ -33,7 +33,8 @@ class Acquire():
             while not self.finished:
                 progress.update(task_id)
                 if (items_page := self._request_items_page(sec_user_id)):
-                    items.extend(items_page)
+                    if not items_page == [None]:
+                        items.extend(items_page)
                     self._early_stop(earliest)
         return items
 
@@ -83,7 +84,7 @@ class Acquire():
                 else:
                     self.cursor = data['max_cursor']
                     self.finished = not data['has_more']
-                    return items_page
+                    return items_page or [None]
             except KeyError:
                 print(f'[{YELLOW}]账号作品数据响应内容异常: {data}')
                 self.finished = True

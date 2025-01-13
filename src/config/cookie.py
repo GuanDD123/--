@@ -1,5 +1,4 @@
 from re import finditer
-from time import time
 from rich import print
 
 from .constant import CYAN, GREEN
@@ -20,11 +19,10 @@ class Cookie:
         self._save()
 
     def update(self):
-        '''更新 Settings.cookies 与 Settings.headers，获取更新时间'''
+        '''更新 Settings.cookies 与 Settings.headers'''
         if self.settings.cookies:
             self._add_cookies()
             self.settings.headers['Cookie'] = self._generate_str(self.settings.cookies)
-            self.last_update_time = time()
 
     def _check(self):
         '''检查 Settings.cookies 是否已登录；删除空键值对'''

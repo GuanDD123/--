@@ -9,14 +9,12 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 from rich import print
-from time import time
 from yarl import URL
 from asyncio import Semaphore, gather, run, create_task, TimeoutError
 from aiohttp import ClientSession, ClientResponse, ClientTimeout
 
 from ..config import (
     GREEN, CYAN, YELLOW, MAGENTA,
-    COOKIE_UPDATE_INTERVAL,
     CHUNK, TIMEOUT, CONCURRENCY
 )
 from ..config import Settings, Cookie
@@ -42,8 +40,6 @@ class Download:
 
     async def _download_file(self, task_info: tuple, progress: Progress, sem: Semaphore):
         await self._request_file(*task_info, progress, sem)
-        if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
-            self.cookie.update()
 
     async def _download_files(self, tasks_info: list, progress: Progress):
         sem = Semaphore(CONCURRENCY)

@@ -6,12 +6,10 @@ from os import makedirs
 from shutil import rmtree
 from datetime import date
 from rich import print
-from time import time
 import subprocess
 
 from .config import (
     PROJECT_ROOT,
-    COOKIE_UPDATE_INTERVAL,
     TEXT_REPLACEMENT,
     WHITE, CYAN
 )
@@ -43,7 +41,6 @@ class Scheduler:
         self.settings.load_settings()
 
     def main_menu(self):
-        self.cookie.update()
         for i in (
             '='*25,
             '1. 复制粘贴写入 Cookie',
@@ -100,9 +97,8 @@ class Scheduler:
         accounts = self.settings.accounts
         print(f'[{CYAN}]共有 {len(accounts)} 个账号的作品等待下载')
         for num, account in enumerate(accounts, start=1):
+            self.cookie.update()
             self._deal_account(num, account)
-            if time()-self.cookie.last_update_time >= COOKIE_UPDATE_INTERVAL:
-                self.cookie.update()
 
     def _deal_account(self, num: int, account: dict[str, str | date]):
         for i in (

@@ -20,11 +20,8 @@ MAGENTA = 'bright_magenta'
 DESCRIPTION_LENGTH = 64
 
 # 重新执行的最大次数
-RETRY_ACCOUNT = 5
+RETRY_ACCOUNT = 3
 RETRY_FILE = 2
-
-# Cookie 更新间隔，单位：秒
-COOKIE_UPDATE_INTERVAL = 60 * 10
 
 # 非法字符集合
 TEXT_REPLACEMENT = frozenset()
